@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import 'package:geolocator/geolocator.dart';
+
+import '../../services/tracking_service.dart';
 
 class MapHomeScreen extends StatefulWidget {
   const MapHomeScreen({super.key});
@@ -14,15 +18,31 @@ class MapHomeScreen extends StatefulWidget {
 class _MapHomeScreenState extends State<MapHomeScreen> {
   GoogleMapController? mapController;
 
+  final TrackingService trackingService = TrackingService();
+
   LatLng currentPosition = const LatLng(21.9000, 77.9000);
 
+  LatLng workerPosition = const LatLng(21.9100, 77.9050);
+
   final Set<Marker> markers = {};
+
+  final Set<Polyline> polylines = {};
+
+  Timer? liveTimer;
 
   @override
   void initState() {
     super.initState();
 
-    getCurrentLocation();
+    initializeMap();
+  }
+
+  Future<void> initializeMap() async {
+    await getCurrentLocation();
+
+    await loadWorkerLocation();
+
+    startLiveTracking();
   }
 
   Future<void> getCurrentLocation() async {
@@ -42,27 +62,74 @@ class _MapHomeScreenState extends State<MapHomeScreen> {
 
     setState(() {
       currentPosition = LatLng(position.latitude, position.longitude);
-
-      markers.add(
-        Marker(
-          markerId: const MarkerId("user"),
-
-          position: currentPosition,
-
-          infoWindow: const InfoWindow(title: "You"),
-        ),
-      );
-
-      markers.add(
-        const Marker(
-          markerId: MarkerId("worker1"),
-
-          position: LatLng(21.9100, 77.9050),
-
-          infoWindow: InfoWindow(title: "PA Worker"),
-        ),
-      );
     });
+  }
+
+  Future<void> loadWorkerLocation() async {
+    final data = await trackingService.getWorkerLocation(1);
+
+    if (data != null && data["latitude"] != null) {
+      setState(() {
+        workerPosition = LatLng(data["latitude"], data["longitude"]);
+
+        updateMarkers();
+
+        updatePolyline();
+      });
+    }
+  }
+
+  void startLiveTracking() {
+    liveTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+      await loadWorkerLocation();
+    });
+  }
+
+  void updateMarkers() {
+    markers.clear();
+
+    markers.add(
+      Marker(
+        markerId: const MarkerId("user"),
+
+        position: currentPosition,
+
+        infoWindow: const InfoWindow(title: "You"),
+      ),
+    );
+
+    markers.add(
+      Marker(
+        markerId: const MarkerId("worker"),
+
+        position: workerPosition,
+
+        infoWindow: const InfoWindow(title: "PA Worker"),
+      ),
+    );
+  }
+
+  void updatePolyline() {
+    polylines.clear();
+
+    polylines.add(
+      Polyline(
+        polylineId: const PolylineId("route"),
+
+        points: [currentPosition, workerPosition],
+
+        width: 5,
+
+        color: Colors.blue,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    liveTimer?.cancel();
+
+    super.dispose();
   }
 
   @override
@@ -77,6 +144,8 @@ class _MapHomeScreenState extends State<MapHomeScreen> {
             ),
 
             markers: markers,
+
+            polylines: polylines,
 
             myLocationEnabled: true,
 
@@ -104,7 +173,7 @@ class _MapHomeScreenState extends State<MapHomeScreen> {
               ),
 
               child: const Text(
-                "Find Nearby PA Workers",
+                "Live Worker Tracking",
 
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
@@ -134,23 +203,31 @@ class _MapHomeScreenState extends State<MapHomeScreen> {
 
                 children: [
                   const Text(
-                    "Need Help?",
+                    "PA Worker Coming",
 
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
 
                   const SizedBox(height: 15),
 
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+                    children: const [Text("Arrival Time"), Text("5 mins")],
+                  ),
+
+                  const SizedBox(height: 20),
+
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6FE7DD),
+                      backgroundColor: Color(0xFF6FE7DD),
 
-                      minimumSize: const Size(double.infinity, 55),
+                      minimumSize: Size(double.infinity, 55),
                     ),
 
                     onPressed: () {},
 
-                    child: const Text("Book PA Worker"),
+                    child: const Text("Contact Worker"),
                   ),
                 ],
               ),
