@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
 
+import '../home/home_screen.dart';
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -48,8 +50,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 );
 
                 if (success) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Login Success")),
+                  Navigator.pushReplacement(
+                    context,
+
+                    MaterialPageRoute(builder: (_) => const HomeScreen()),
                   );
                 } else {
                   ScaffoldMessenger.of(

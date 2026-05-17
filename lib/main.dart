@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 
 import 'providers/auth_provider.dart';
 
+import 'providers/home_provider.dart';
+
 import 'screens/auth/login_screen.dart';
 
 void main() {
@@ -16,7 +18,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => AuthProvider())],
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+
+        ChangeNotifierProvider(create: (_) => HomeProvider()),
+      ],
 
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
