@@ -6,6 +6,8 @@ import 'providers/auth_provider.dart';
 
 import 'providers/home_provider.dart';
 
+import 'providers/booking_provider.dart';
+
 import 'screens/auth/login_screen.dart';
 
 void main() {
@@ -22,6 +24,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
 
         ChangeNotifierProvider(create: (_) => HomeProvider()),
+
+        ChangeNotifierProvider(create: (_) => BookingProvider()),
       ],
 
       child: MaterialApp(
