@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
 
-import '../home/home_screen.dart';
+import '../home/map_home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -25,6 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       appBar: AppBar(
         title: const Text("PA Login"),
+
         backgroundColor: const Color(0xFF6FE7DD),
       ),
 
@@ -53,7 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Navigator.pushReplacement(
                     context,
 
-                    MaterialPageRoute(builder: (_) => const HomeScreen()),
+                    MaterialPageRoute(builder: (_) => const MapHomeScreen()),
                   );
                 } else {
                   ScaffoldMessenger.of(
