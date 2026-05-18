@@ -1,52 +1,44 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
-import 'package:provider/provider.dart';
-
-import '../../providers/booking_provider.dart';
+import '../../../worker_app/lib/services/socket_service.dart';
 
 class BookingStatusScreen extends StatefulWidget {
-  final int bookingId;
-
-  const BookingStatusScreen({super.key, required this.bookingId});
+  const BookingStatusScreen({super.key});
 
   @override
   State<BookingStatusScreen> createState() => _BookingStatusScreenState();
 }
 
 class _BookingStatusScreenState extends State<BookingStatusScreen> {
-  Timer? timer;
+  final SocketService socketService = SocketService();
+
+  String bookingStatus = "PENDING";
 
   @override
   void initState() {
     super.initState();
 
-    loadStatus();
+    listenSocket();
+  }
 
-    timer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      loadStatus();
+  void listenSocket() {
+    socketService.bookingStream.listen((data) {
+      if (data["type"] == "booking_accepted") {
+        setState(() {
+          bookingStatus = "ACCEPTED";
+        });
+      }
+
+      if (data["type"] == "booking_rejected") {
+        setState(() {
+          bookingStatus = "REJECTED";
+        });
+      }
     });
-  }
-
-  void loadStatus() {
-    Provider.of<BookingProvider>(
-      context,
-      listen: false,
-    ).getBookingStatus(widget.bookingId);
-  }
-
-  @override
-  void dispose() {
-    timer?.cancel();
-
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<BookingProvider>(context);
-
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFF6FE7DD),
@@ -59,14 +51,18 @@ class _BookingStatusScreenState extends State<BookingStatusScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
 
           children: [
-            const Text("Current Status", style: TextStyle(fontSize: 20)),
+            const Text(
+              "Current Booking Status",
+
+              style: TextStyle(fontSize: 20),
+            ),
 
             const SizedBox(height: 20),
 
             Text(
-              provider.bookingStatus.toUpperCase(),
+              bookingStatus,
 
-              style: const TextStyle(fontSize: 35, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
             ),
           ],
         ),
